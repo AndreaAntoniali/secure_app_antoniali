@@ -14,4 +14,10 @@ import { MatAnchor } from "@angular/material/button";
 export class HomeComponent {
   svc = inject(AuthServices)
   router = inject(Router)
+
+
+
+  disconnect(){
+    this.svc.logout()
+  }
 }

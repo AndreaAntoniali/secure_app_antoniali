@@ -3,7 +3,7 @@
     @if (svc.isLoggedIn()) {
         <mat-card-header>Bienvenue {{svc.currentUser()?.login}}</mat-card-header>
         <mat-card-actions>
-            <button matButton=>Déconnection</button>
+            <button matButton (click)="disconnect()">Déconnection</button>
         </mat-card-actions>
     }@else{
         <mat-card-content>Vous n'êtes pas actuellement connecté.</mat-card-content>
