@@ -1,0 +1,16 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5 24px;
+  font-size: 1.2em;
+}
+
+.app-title {
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}

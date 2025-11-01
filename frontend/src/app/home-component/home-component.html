@@ -1,0 +1,16 @@
+
+<mat-card>
+    @if (svc.isLoggedIn()) {
+        <mat-card-header>Bienvenue {{svc.currentUser()?.login}}</mat-card-header>
+        <mat-card-actions>
+            <button matButton=>Déconnection</button>
+        </mat-card-actions>
+    }@else{
+        <mat-card-content>Vous n'êtes pas actuellement connecté.</mat-card-content>
+        <mat-card-actions>
+            <a routerLink="/login" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Page de connexion</a> 
+        </mat-card-actions>
+    }
+</mat-card>
+
+

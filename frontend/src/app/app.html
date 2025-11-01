@@ -1,0 +1,38 @@
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
+<!-- * * * * * * * to get started with your project! * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+
+<mat-toolbar color="primary" class="app-header">
+
+  <span class="app-title">{{ title() }}</span>
+
+  <span class="spacer"></span>
+    
+    <a mat-button routerLink="home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+    @if(!isLoggedIn()){
+
+    <a mat-button routerLink="login" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Login</a>
+    }
+    @if (isAdmin()){
+    <a mat-button routerLink="admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Admin</a>
+    }
+</mat-toolbar>
+
+
+
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
+<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+
+
+<router-outlet />

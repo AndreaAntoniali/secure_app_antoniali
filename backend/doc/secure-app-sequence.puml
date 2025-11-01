@@ -1,0 +1,192 @@
+"@startuml "
+title Secure App - Diagrammes de séquence complets
+
+skinparam backgroundColor #FEFEFE
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 20
+
+actor User as U
+participant "Frontend\nAngular:4200" as F
+participant "Backend\nExpress:4000" as B
+participant "Middleware\nverifyToken" as MT
+participant "Middleware\nrequireAdmin" as MA
+database "PostgreSQL\nPort:5432" as DB
+
+== Initialisation du serveur ==
+activate B
+B -> B: Chargement certificats SSL\n(localhost.pem, localhost-key.pem)
+B -> B: Configuration middleware:\n- CORS (origin: localhost:4200)\n- Security Headers\n- morgan, express.json, cookieParser
+B -> DB: ensureAdmin()
+activate DB
+DB -> DB: INSERT admin ON CONFLICT DO NOTHING
+DB --> B: Admin créé/vérifié
+deactivate DB
+B -> B: Démarrage serveur HTTPS:4000
+note right of B
+  Headers de sécurité:
+  • X-Content-Type-Options: nosniff
+  • X-Frame-Options: SAMEORIGIN
+  • Referrer-Policy: no-referrer
+  • Cross-Origin-Resource-Policy: same-origin
+  • Cross-Origin-Opener-Policy: same-origin
+  • Cross-Origin-Embedder-Policy: require-corp
+end note
+deactivate B
+
+== Scénario 1: Authentification réussie ==
+U -> F: Saisie login/password\n(admin/admin)
+activate F
+F -> B: POST /api/auth/login\nContent-Type: application/json\n{"login":"admin","password":"admin"}
+activate B
+B -> B: Route publique (pas de middleware)
+B -> DB: SELECT id, login, password_hash, role\nFROM users WHERE login=$1
+activate DB
+DB --> B: {id:1, login:'admin',\npassword_hash:'$2b$10...', role:'admin'}
+deactivate DB
+B -> B: bcrypt.compare(password, hash)
+alt Mot de passe correct
+    B -> B: createAccessToken({id, login, role})\njwt.sign(user, JWT_SECRET, {expiresIn: '15m'})
+    B -> B: createRefreshToken({id, login, role})\njwt.sign(user, JWT_SECRET, {expiresIn: '7d'})
+    B --> F: 200 OK\nSet-Cookie: access_token (HttpOnly, Secure, SameSite)\nSet-Cookie: refresh_token (HttpOnly, Secure, SameSite)\n{"message":"Connexion réussie"}
+    deactivate B
+    F -> F: Stocker tokens en cookies
+    F --> U: Redirection vers /dashboard
+else Mot de passe incorrect
+    B --> F: 401 Unauthorized\n{"error":"Identifiants invalides"}
+    F --> U: Afficher message d'erreur
+end
+deactivate F
+
+== Scénario 2: Accès route publique ==
+U -> F: Demande ressource publique
+activate F
+F -> B: GET /api/public/resource
+activate B
+B -> B: Route publique (pas de middleware)
+B --> F: 200 OK + données
+deactivate B
+F --> U: Affichage données
+deactivate F
+
+== Scénario 3: Liste des utilisateurs (protégé) ==
+U -> F: Clic "Liste utilisateurs"
+activate F
+F -> B: GET /api/users\nCookie: access_token=eyJhbG...
+activate B
+B -> MT: verifyToken(req, res, next)
+activate MT
+MT -> MT: Lire req.cookies.access_token
+alt Token présent
+    MT -> MT: jwt.verify(token, JWT_SECRET)
+    alt Token valide
+        MT -> MT: req.user = {id, login, role}
+        MT -> B: next()
+        deactivate MT
+        B -> DB: SELECT id, login, role FROM users
+        activate DB
+        DB --> B: [{id:1, login:'admin', role:'admin'},\n{id:2, login:'alice', role:'user'}]
+        deactivate DB
+        B --> F: 200 OK\n[{...users}]
+        deactivate B
+        F --> U: Afficher liste
+    else Token expiré/invalide
+        MT --> F: 403 Forbidden\n{"error":"Token invalide ou expiré"}
+        deactivate MT
+        F -> F: Tentative refresh
+        F -> B: POST /api/auth/refresh\nCookie: refresh_token
+        activate B
+        B -> B: jwt.verify(refresh_token)
+        alt Refresh token valide
+            B -> B: Générer nouveau access_token
+            B --> F: 200 OK\nSet-Cookie: access_token (nouveau)
+            deactivate B
+            F -> B: Retry GET /api/users
+            note right: Retour au début du scénario 3
+        else Refresh token invalide
+            B --> F: 403 Forbidden
+            deactivate B
+            F --> U: Redirection vers /login
+        end
+    end
+else Token absent
+    MT --> F: 401 Unauthorized\n{"error":"Token manquant"}
+    deactivate MT
+    F --> U: Redirection vers /login
+end
+deactivate F
+
+== Scénario 4: Création d'utilisateur (admin requis) ==
+U -> F: Remplir formulaire nouvel utilisateur\n(login: "bob", password: "Test123!")
+activate F
+F -> B: POST /api/users\nCookie: access_token\n{"login":"bob","password":"Test123!"}
+activate B
+B -> MT: verifyToken(req, res, next)
+activate MT
+MT -> MT: Vérifier et décoder access_token
+MT -> MT: req.user = {id:1, login:'admin', role:'admin'}
+MT -> B: next()
+deactivate MT
+B -> B: Validation: login && password
+alt Données valides
+    B -> B: hash = bcrypt.hash(password, 10)
+    B -> DB: INSERT INTO users (login, password_hash)\nVALUES ($1, $2)
+    activate DB
+    alt Login unique
+        DB --> B: INSERT réussi
+        deactivate DB
+        B --> F: 201 Created\n{"message":"Utilisateur créé"}
+        deactivate B
+        F --> U: Message de succès
+    else Login déjà existant
+        DB --> B: Error code '23505' (UNIQUE violation)
+        deactivate DB
+        B --> F: 409 Conflict\n{"error":"Login déjà existant"}
+        deactivate B
+        F --> U: Message d'erreur
+    end
+else Données invalides
+    B --> F: 400 Bad Request\n{"error":"Login et mot de passe requis"}
+    deactivate B
+    F --> U: Message d'erreur
+end
+deactivate F
+
+== Scénario 5: Accès route admin ==
+U -> F: Clic "Panel Admin"
+activate F
+F -> B: GET /api/admin\nCookie: access_token
+activate B
+B -> MT: verifyToken(req, res, next)
+activate MT
+MT -> MT: jwt.verify(token, JWT_SECRET)
+MT -> MT: req.user = {id, login, role}
+MT -> B: next()
+deactivate MT
+B -> MA: requireAdmin(req, res, next)
+activate MA
+MA -> MA: Vérifier req.user.role === 'admin'
+alt Role = admin
+    MA -> B: next()
+    deactivate MA
+    B --> F: 200 OK\n{"message":"Bienvenue admin"}
+    deactivate B
+    F --> U: Afficher panel admin
+else Role != admin
+    MA --> F: 403 Forbidden\n{"error":"Accès interdit"}
+    deactivate MA
+    F --> U: Message "Accès refusé"
+end
+deactivate F
+
+== Scénario 6: Déconnexion ==
+U -> F: Clic "Déconnexion"
+activate F
+F -> B: POST /api/auth/logout
+activate B
+B --> F: 200 OK\nSet-Cookie: access_token=; expires=Thu, 01 Jan 1970\nSet-Cookie: refresh_token=; expires=Thu, 01 Jan 1970
+deactivate B
+F -> F: Supprimer cookies côté client
+F --> U: Redirection vers /login
+deactivate F
+
+@enduml
