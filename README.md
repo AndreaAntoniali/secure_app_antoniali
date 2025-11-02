@@ -260,8 +260,9 @@ npm start
 #### Inscription
 
 ```bash
-curl -X POST http://localhost:4000/api/auth/register \
+curl -X POST https://localhost:4000/api/auth/register \
   -H "Content-Type: application/json" \
+  -k \
   -d '{
     "login": "johndoe",
     "password": "monMotDePasse123"
@@ -271,8 +272,9 @@ curl -X POST http://localhost:4000/api/auth/register \
 #### Connexion
 
 ```bash
-curl -X POST http://localhost:4000/api/auth/login \
+curl -X POST https://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
+  -k \
   -d '{
     "login": "johndoe",
     "password": "monMotDePasse123"
@@ -283,7 +285,8 @@ curl -X POST http://localhost:4000/api/auth/login \
 #### Obtenir la liste des utilisateurs (avec cookies)
 
 ```bash
-curl -X GET http://localhost:4000/api/users \
+curl -X GET https://localhost:4000/api/users \
+  -k \
   -b cookies.txt
 ```
 
