@@ -11,12 +11,13 @@ services:
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - db_data:/var/lib/postgresql/data
     ports:
-    - "5432:5432"
+      - "5432:5432"
+
   adminer:
     image: adminer
     container_name: secureapp_adminer
     restart: unless-stopped
     ports:
-     - "8080:8080"
+      - "8080:8080"
 volumes:
-  db_data:
+  db_data:  

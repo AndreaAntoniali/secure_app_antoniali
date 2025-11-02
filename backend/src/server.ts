@@ -4,12 +4,12 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
-import publicRouter from "./routes/public.ts"
-import { ensureAdmin } from './initAdmin.ts'
+import publicRouter from "./routes/public.js"
+import { ensureAdmin } from './initAdmin.js'
 import usersRouter from './routes/users.js'
-import authRouter from './routes/auth.ts'
-import { verifyToken } from './middleware/token-management.ts'
-import { requireAdmin } from './middleware/auth-admin.ts'
+import authRouter from './routes/auth.js'
+import { verifyToken } from './middleware/token-management.js'
+import { requireAdmin } from './middleware/auth-admin.js'
 import 'dotenv/config'
 
 await ensureAdmin()
@@ -40,15 +40,16 @@ app.use(express.json())
 app.use(cookieParser())
 
 // Configuration CORS : autoriser le front Angular en HTTPS local
+
+
 app.use(cors({
-    origin: 'https://localhost:4200',
+    origin: "https://localhost:8080",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }))
 // Routes publiques
 
-await ensureAdmin()
 app.use('/api/public', publicRouter)
 app.use('/api/auth', authRouter);
 app.use('/api/users', verifyToken, usersRouter); // protégé
@@ -56,10 +57,11 @@ app.use('/api/admin', verifyToken, requireAdmin, (req, res) => {
     res.json({ message: 'Bienvenue admin' });
 })
 // Chargement du certificat et clé générés par mkcert (étape 0)
-const key = fs.readFileSync('../certs/localhost-key.pem')
-const cert = fs.readFileSync('../certs/localhost.pem')
-// Lancement du serveur HTTPS
-https.createServer({ key, cert }, app).listen(4000, () => {
-    console.log('👍 Serveur API démarré sur https://localhost:4000')
 
+
+const key = fs.readFileSync("./certs/localhost-key.pem");
+const cert = fs.readFileSync("./certs/localhost.pem");
+
+https.createServer({ key, cert }, app).listen(4000, () => {
+  console.log('👍 Serveur API démarré sur "https://localhost:8080"')
 })
