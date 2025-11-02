@@ -15,16 +15,9 @@ export class App {
 
   private readonly authSvc = inject(AuthServices) as AuthServices;
   private readonly router = inject(Router);
-  protected readonly title = signal('frontend');
+  protected readonly title = signal('app-secure-antoniali-andrea');
   protected readonly isLoggedIn = computed (() => this.authSvc.isLoggedIn());
   protected readonly isAdmin = computed (() => this.authSvc.isLoggedIn());
   
-  constructor(){
 
-    
-    if (!this.authSvc.isLoggedIn()){
-      console.log("Hihi tu n'es pas connecté je te mets sur la page login")
-    
-    }
-  }
 }
