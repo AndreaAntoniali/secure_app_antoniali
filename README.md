@@ -4,14 +4,13 @@
 > Utilisation pour le front d'Angular 
 
 [![Repo](https://img.shields.io/badge/repo-AndreaAntoniali/secure_app_antoniali-blue)](https://github.com/AndreaAntoniali/secure_app_antoniali)
-[![Languages](https://img.shields.io/github/languages/top/AndreaAntoniali/secure_app_antoniali)](https://github.com/AndreaAntoniali/secure_app_antoniali)
 
 ## À propos
 secure_app_antoniali est un projet backend de test/démonstration. Le dépôt contient principalement du TypeScript et JavaScript et inclut une configuration Docker. Ce README donne des instructions générales pour installer, configurer, développer et déployer l'application localement.
 
 Si tu souhaites que j'adapte ce README au contenu exact du dépôt (scripts npm, endpoints, exemples concrets), donne-moi le fichier `package.json` ou dis-moi quelles commandes sont présentes.
 
-## Technos
+## Technologies :
 Le projet utilise principalement :
 - Angular pour la logique métier et le backend -> typescritp
 - SCSS pour parties frontales éventuelles
